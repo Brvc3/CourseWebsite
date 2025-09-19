@@ -277,11 +277,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             // 如果有代码块，动态加载highlight.js
                             const highlightCSS = document.createElement('link');
                             highlightCSS.rel = 'stylesheet';
-                            highlightCSS.href = 'https://cdn.bootcdn.net/ajax/libs/highlight.js/11.7.0/styles/github.min.css';
+                            highlightCSS.href = 'https://unpkg.com/@highlightjs/cdn-assets@11.7.0/styles/github.min.css';
                             document.head.appendChild(highlightCSS);
                             
                             const highlightJS = document.createElement('script');
-                            highlightJS.src = 'https://cdn.bootcdn.net/ajax/libs/highlight.js/11.7.0/highlight.min.js';
+                            highlightJS.src = 'https://unpkg.com/@highlightjs/cdn-assets@11.7.0/highlight.min.js';
                             highlightJS.onload = () => {
                                 document.querySelectorAll('pre code').forEach((block) => {
                                     hljs.highlightBlock(block);
