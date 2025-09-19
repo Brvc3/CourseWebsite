@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课程详情</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="components/nav.js"></script>
+    <link rel="stylesheet" href="styles/design-system.css">
+    <style>
+        .course-tabs {
+            position: relative;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .tab-item {
+            position: relative;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            padding: 0.75rem 1.25rem;
+            color: #6b7280;
+        }
+        .tab-item:hover {
+            color: #3b82f6;
+        }
+        .active-tab { 
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        .active-tab::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #3b82f6;
+            border-radius: 2px;
+            transform-origin: center;
+            animation: tabActivate 0.3s ease forwards;
+        }
+        @keyframes tabActivate {
+            from {
+                transform: scaleX(0.5);
+                opacity: 0;
+            }
+            to {
+                transform: scaleX(1);
+                opacity: 1;
+            }
+        }
+        .content-section { 
+            display: none;
+            animation: fadeIn 0.3s ease forwards;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .visible { 
+            display: block;
+        }
+        #compiler-frame { 
+            width: 100%; 
+            height: 75vh; 
+            border: 1px solid #e5e7eb; 
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .video-item button {
+            transition: all 0.3s ease;
+        }
+        .video-item.active button {
+            background: linear-gradient(to right, #eff6ff, #f0f7ff);
+            color: #2563eb;
+            font-weight: 600;
+            border-left: 3px solid #3b82f6;
+        }
+        .video-item button:hover {
+            background-color: #f3f4f6;
+            transform: translateX(4px);
+        }
+        .resource-item {
+            transition: all 0.3s ease;
+        }
+        .resource-item:hover {
+            transform: translateX(4px);
+        }
+    </style>
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/@waline/client@v3/dist/waline.css"
+    />
+</head>
+<body class="antialiased">
+    <div class="min-h-screen flex flex-col">
+        <!-- 顶部导航栏 -->
+        <header class="fixed top-0 left-0 right-0 z-50 nav-glass border-b border-blue-100/50 shadow-sm">
+            <div class="container mx-auto px-4">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center gap-8">
+                        <a href="index.html" class="text-gray-600 hover:text-blue-600 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                            </svg>
+                        </a>
+                        <h1 id="course-title" class="text-2xl font-bold text-gray-800"></h1>
+                    </div>
+                    <div class="flex items-center gap-6">
+                        <nav class="course-tabs">
+                            <div class="flex items-center space-x-2">
+                                <button class="tab-item nav-tab active-tab" data-target="resources">
+                                    <span class="flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                        </svg>
+                                        <span>课程资源</span>
+                                    </span>
+                                </button>
+                                <button class="tab-item nav-tab" data-target="compiler">
+                                    <span class="flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                        <span>在线编译</span>
+                                    </span>
+                                </button>
+                                <button class="tab-item nav-tab" data-target="assignments">
+                                    <span class="flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                                        </svg>
+                                        <span>课程作业</span>
+                                    </span>
+                                </button>
+                                <button class="tab-item nav-tab" data-target="challenges">
+                                    <span class="flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <span>编程闯关</span>
+                                    </span>
+                                </button>
+                                <button class="tab-item nav-tab" data-target="pta">
+                                    <span class="flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                                        </svg>
+                                        <span>在线测评</span>
+                                    </span>
+                                </button>
+                            </div>
+                        </nav>
+                        <!-- 用户认证区域 -->
+                        <div class="flex items-center space-x-4">
+                            <div id="userInfo" style="display: none;" class="flex items-center gap-3">
+                                <div id="userAvatar" class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm"></div>
+                                <span id="userName" class="text-gray-700 font-medium"></span>
+                                <button id="logoutBtn" class="text-gray-500 hover:text-blue-600 transition-colors text-sm">登出</button>
+                            </div>
+                            <button id="loginBtn" class="px-4 py-2 text-gray-600 hover:text-blue-600 font-medium transition-colors">登录</button>
+                            <button id="registerBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">注册</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主要内容区 -->
+        <main class="flex-1 container mx-auto px-4 pt-24 pb-12">
+            <!-- 内容区域 -->
+            <section id="resources" class="content-section visible space-y-8">
+                <!-- 视频播放区 -->
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    <div class="lg:col-span-3">
+                        <div class="card card-gradient rounded-3xl shadow-xl border border-blue-100/50 overflow-hidden">
+                            <div id="video-player-container" class="aspect-video bg-gray-900">
+                                <div class="flex items-center justify-center h-full">
+                                    <p class="text-white/70">请从右侧选择一个视频进行播放</p>
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <div id="waline"></div>
+                                <script type="module">
+                                import { init } from 'https://unpkg.com/@waline/client@v3/dist/waline.js';
+                                init({
+                                    el: '#waline',
+                                    serverURL: 'https://coursely-ehh2a0jom-brvc3s-projects.vercel.app',
+                                });
+                                </script>
+                            </div>
+                        </div>
+
+                        <!-- 课件资源区 -->
+                        <div class="mt-8 card card-gradient rounded-3xl shadow-xl border border-blue-100/50 p-6">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-semibold text-gray-800">课程课件</h3>
+                            </div>
+                            <ul id="resource-list" class="space-y-3">
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- 右侧视频列表 -->
+                    <div class="lg:col-span-1">
+                        <div class="card card-gradient rounded-3xl shadow-xl border border-blue-100/50 p-6 sticky top-24">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="p-3 bg-gradient-to-br from-green-500 to-blue-600 rounded-xl shadow-lg">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                </svg>
+                                <h2 class="text-lg font-semibold text-gray-800">视频列表</h2>
+                            </div>
+                            <div class="overflow-y-auto max-h-[calc(100vh-250px)] pr-2 -mr-2">
+                                <ul id="video-list" class="space-y-2">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="compiler" class="content-section">
+                <div class="card card-gradient rounded-3xl shadow-xl border border-blue-100/50 overflow-hidden">
+                    <div class="p-6 border-b border-gray-100">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="p-3 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl shadow-lg">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-semibold text-gray-800">多语言在线编译器</h2>
+                                <p class="text-gray-600 text-sm">支持多种编程语言，在这里直接编写、编译和运行代码，实时测试你的程序。</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 语言选择选项卡 -->
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <button class="compiler-tab active px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300" data-lang="c" data-url="https://www.runoob.com/try/runcode.php?filename=helloworld&type=c">
+                                <span class="flex items-center gap-2">
+                                    <span class="w-2 h-2 bg-white rounded-full"></span>
+                                    C语言
+                                </span>
+                            </button>
+                            <button class="compiler-tab px-4 py-2 bg-white text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all duration-300" data-lang="cpp" data-url="https://www.runoob.com/try/runcode.php?filename=helloworld&type=cpp">
+                                <span class="flex items-center gap-2">
+                                    <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                    C++
+                                </span>
+                            </button>
+                            <button class="compiler-tab px-4 py-2 bg-white text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all duration-300" data-lang="python" data-url="https://www.runoob.com/try/runcode.php?filename=helloworld&type=python3">
+                                <span class="flex items-center gap-2">
+                                    <span class="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                                    Python
+                                </span>
+                            </button>
+                            <button class="compiler-tab px-4 py-2 bg-white text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all duration-300" data-lang="java" data-url="https://www.runoob.com/try/runcode.php?filename=HelloWorld&type=java">
+                                <span class="flex items-center gap-2">
+                                    <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                                    Java
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    <iframe id="compiler-frame" src="https://www.runoob.com/try/runcode.php?filename=helloworld&type=c" scrolling="no" class="w-full h-[calc(100vh-300px)]"></iframe>
+                </div>
+            </section>
+            
+            <section id="assignments" class="content-section">
+                <div class="card card-gradient rounded-3xl shadow-xl border border-blue-100/50 p-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                            </svg>
+                        </div>
+                        <h2 class="text-xl font-semibold text-gray-800">课程作业</h2>
+                    </div>
+                    <div id="assignment-list" class="space-y-4">
+                    </div>
+                </div>
+            </section>
+
+            <section id="challenges" class="content-section">
+                <div class="card card-gradient rounded-3xl shadow-xl border border-blue-100/50 p-6">
+                    <div class="flex items-center justify-between mb-8">
+                        <div class="flex items-center gap-3">
+                            <div class="p-3 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl shadow-lg">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <h2 class="text-xl font-semibold text-gray-800">编程闯关</h2>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-lg">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                                </svg>
+                                <span class="font-medium" id="total-points">总分: 0</span>
+                            </div>
+                            <div class="flex items-center gap-2 bg-green-50 text-green-600 px-4 py-2 rounded-lg">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                                </svg>
+                                <span class="font-medium" id="completed-challenges">完成: 0/0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-6" id="challenge-list">
+                        <!-- 闯关卡片将通过 JavaScript 动态生成 -->
+                    </div>
+                </div>
+            </section>
+
+            <section id="pta" class="content-section">
+                <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-100/50 p-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                        <h2 class="text-xl font-semibold text-gray-800">在线测评</h2>
+                    </div>
+                    <div class="prose max-w-none">
+                        <div class="flex flex-col gap-6">
+                            <div class="bg-blue-50/50 rounded-xl p-6 border border-blue-100">
+                                <h3 class="text-lg font-semibold text-blue-900 mb-2">浙江大学 PTA 编程测评平台</h3>
+                                <p class="text-blue-800/80 mb-4">通过实时自动评测系统，立即获取您的程序评测结果。在这里，您可以：</p>
+                                <ul class="list-disc list-inside text-blue-800/70 mb-4 space-y-1">
+                                    <li>提交程序代码获取即时反馈</li>
+                                    <li>查看详细的测试用例结果</li>
+                                    <li>了解程序的运行效率和内存使用</li>
+                                    <li>与其他同学的完成情况进行比较</li>
+                                </ul>
+                                <a href="https://pintia.cn/" target="_blank" class="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors group">
+                                    <span>进入 PTA 平台</span>
+                                    <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                                    </svg>
+                                </a>
+                            </div>
+                            <div class="bg-gray-50/80 rounded-xl p-6 border border-gray-200">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">快速提示</h3>
+                                <div class="space-y-3 text-gray-700">
+                                    <p class="flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <span>首次使用需要注册账号并加入课程。课程加入码请查看课程群通知。</span>
+                                    </p>
+                                    <p class="flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <span>提交代码前请仔细阅读题目要求，特别注意输入输出格式。</span>
+                                    </p>
+                                    <p class="flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <span>系统会自动检查代码的正确性、时间复杂度和空间复杂度。</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="mt-auto py-6 bg-white/50 backdrop-blur-sm border-t border-gray-100">
+            <div class="container mx-auto px-4">
+                <p class="text-center text-gray-500 text-sm">&copy; 2025 教学改革课程组. All Rights Reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="course-data.js"></script>
+    <!-- 加载认证脚本 -->
+    <script src="components/auth.js"></script>
+    <script>
+    // 从 URL 获取课程 ID 并设置
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('id');
+        if (courseId) {
+            document.body.setAttribute('data-course-id', courseId);
+        }
+        
+        // 初始化认证功能
+        setTimeout(() => {
+            if (window.authManager) {
+                window.authManager.updateUI();
+                console.log('Auth initialized for course page');
+            }
+        }, 100);
+        
+        // 初始化编译器选项卡切换功能
+        initCompilerTabs();
+    });
+    
+    // 编译器选项卡切换功能
+    function initCompilerTabs() {
+        const compilerTabs = document.querySelectorAll('.compiler-tab');
+        const compilerFrame = document.getElementById('compiler-frame');
+        
+        compilerTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // 移除所有选项卡的active状态
+                compilerTabs.forEach(t => {
+                    t.classList.remove('active');
+                    t.classList.remove('bg-gradient-to-r', 'from-blue-500', 'to-blue-600', 'text-white', 'shadow-lg');
+                    t.classList.add('bg-white', 'text-gray-600', 'border', 'border-gray-200', 'hover:bg-gray-50');
+                });
+                
+                // 为当前选项卡添加active状态
+                this.classList.add('active');
+                this.classList.remove('bg-white', 'text-gray-600', 'border', 'border-gray-200', 'hover:bg-gray-50');
+                this.classList.add('bg-gradient-to-r', 'from-blue-500', 'to-blue-600', 'text-white', 'shadow-lg');
+                
+                // 切换编译器iframe的URL
+                const url = this.getAttribute('data-url');
+                if (url && compilerFrame) {
+                    compilerFrame.src = url;
+                    
+                    // 添加加载提示
+                    const loadingIndicator = document.createElement('div');
+                    loadingIndicator.className = 'absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10';
+                    loadingIndicator.innerHTML = `
+                        <div class="flex items-center gap-3 text-gray-600">
+                            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                            <span>正在加载 ${this.textContent.trim()} 编译器...</span>
+                        </div>
+                    `;
+                    
+                    const compilerContainer = compilerFrame.parentElement;
+                    compilerContainer.style.position = 'relative';
+                    compilerContainer.appendChild(loadingIndicator);
+                    
+                    // 移除加载提示
+                    compilerFrame.onload = function() {
+                        setTimeout(() => {
+                            if (loadingIndicator.parentElement) {
+                                loadingIndicator.remove();
+                            }
+                        }, 1000);
+                    };
+                }
+            });
+        });
+    }
+    </script>
+    <script src="course-loader.js"></script>
+</body>
+</html>

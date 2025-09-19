@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>认证测试页面</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8">认证功能测试</h1>
+        
+        <!-- 导航栏占位符 -->
+        <div id="navigationPlaceholder" class="mb-8"></div>
+        
+        <!-- 调试信息 -->
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-semibold mb-4">调试信息</h2>
+            <div id="debugInfo" class="text-sm text-gray-600"></div>
+            <button id="clearConsole" class="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">清空控制台</button>
+        </div>
+        
+        <!-- 测试按钮 -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-semibold mb-4">手动测试</h2>
+            <div class="space-x-4">
+                <button id="testLogin" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">测试登录模态框</button>
+                <button id="testRegister" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">测试注册模态框</button>
+                <button id="testLogout" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">测试登出</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 先加载认证脚本，再加载导航脚本 -->
+    <script src="components/auth.js"></script>
+    <script src="components/nav.js"></script>
+    
+    <script>
+        let debugMessages = [];
+        
+        function addDebugMessage(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugMessages.push(`[${timestamp}] ${message}`);
+            updateDebugDisplay();
+            console.log(`[DEBUG] ${message}`);
+        }
+        
+        function updateDebugDisplay() {
+            document.getElementById('debugInfo').innerHTML = 
+                debugMessages.slice(-10).map(msg => `<div>${msg}</div>`).join('');
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            addDebugMessage('DOM Content Loaded');
+            
+            // 延迟初始化，确保脚本完全加载
+            setTimeout(() => {
+                // 初始化导航
+                if (typeof initializeNavigation === 'function') {
+                    initializeNavigation('test');
+                    addDebugMessage('Navigation initialized');
+                } else {
+                    addDebugMessage('ERROR: initializeNavigation function not found');
+                }
+                
+                // 检查认证管理器
+                if (window.authManager) {
+                    addDebugMessage('AuthManager found');
+                    addDebugMessage(`Auth status: ${window.authManager.isLoggedIn}`);
+                } else {
+                    addDebugMessage('ERROR: AuthManager not found');
+                }
+            }, 200);
+            
+            // 设置测试按钮
+            document.getElementById('testLogin').addEventListener('click', () => {
+                addDebugMessage('Manual test: Login button clicked');
+                if (window.authManager) {
+                    window.authManager.showModal('login');
+                } else {
+                    addDebugMessage('ERROR: AuthManager not available');
+                }
+            });
+            
+            document.getElementById('testRegister').addEventListener('click', () => {
+                addDebugMessage('Manual test: Register button clicked');
+                if (window.authManager) {
+                    window.authManager.showModal('register');
+                } else {
+                    addDebugMessage('ERROR: AuthManager not available');
+                }
+            });
+            
+            document.getElementById('testLogout').addEventListener('click', () => {
+                addDebugMessage('Manual test: Logout button clicked');
+                if (window.authManager) {
+                    window.authManager.logout();
+                } else {
+                    addDebugMessage('ERROR: AuthManager not available');
+                }
+            });
+            
+            document.getElementById('clearConsole').addEventListener('click', () => {
+                debugMessages = [];
+                updateDebugDisplay();
+                console.clear();
+            });
+        });
+        
+        // 监听所有控制台消息
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            if (args[0] && args[0].includes && (args[0].includes('AuthManager') || args[0].includes('Nav'))) {
+                addDebugMessage(args.join(' '));
+            }
+        };
+        
+        const originalError = console.error;
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addDebugMessage('ERROR: ' + args.join(' '));
+        };
+    </script>
+</body>
+</html>

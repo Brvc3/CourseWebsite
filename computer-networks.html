@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课程详情</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles/design-system.css">
+    <style>
+        .active-tab { 
+            border-bottom: 2px solid #3b82f6; 
+            color: #3b82f6; 
+            font-weight: 600;
+            position: relative;
+        }
+        .active-tab::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, #3b82f6, #6366f1);
+        }
+        .content-section { display: none; }
+        .visible { display: block; }
+        #compiler-frame { 
+            width: 100%; 
+            height: 75vh; 
+            border: 1px solid #e5e7eb; 
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .video-item button {
+            transition: all 0.3s ease;
+        }
+        .video-item.active button {
+            background: linear-gradient(to right, #eff6ff, #f0f7ff);
+            color: #2563eb;
+            font-weight: 600;
+            border-left: 3px solid #3b82f6;
+        }
+        .video-item button:hover {
+            background-color: #f3f4f6;
+            transform: translateX(4px);
+        }
+        .resource-item {
+            transition: all 0.3s ease;
+        }
+        .resource-item:hover {
+            transform: translateX(4px);
+        }
+    </style>
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/@waline/client@v3/dist/waline.css"
+    />
+</head>
+<body class="antialiased" data-course-id="computer-networks">
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <header class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div>
+                    <h1 id="course-title" class="text-3xl font-bold text-gray-800"></h1>
+                    <p id="course-subtitle" class="text-gray-500 mt-1"></p>
+                </div>
+                <div>
+                    <a href="index.html" class="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors text-sm">返回课程列表</a>
+                </div>
+            </div>
+        </header>
+        
+        <nav class="bg-white rounded-lg shadow-md p-4 mb-8 sticky top-4 z-10">
+            <ul class="flex items-center justify-center space-x-6 md:space-x-10 text-gray-600">
+                <li><button class="nav-tab text-lg py-2 px-3 transition-colors duration-300 hover:text-blue-500 active-tab" data-target="resources">课程资源</button></li>
+                <li><button class="nav-tab text-lg py-2 px-3 transition-colors duration-300 hover:text-blue-500" data-target="compiler">在线编译</button></li>
+                <li><button class="nav-tab text-lg py-2 px-3 transition-colors duration-300 hover:text-blue-500" data-target="assignments">课程作业</button></li>
+                <li><button class="nav-tab text-lg py-2 px-3 transition-colors duration-300 hover:text-blue-500" data-target="pta">在线测评</button></li>
+            </ul>
+        </nav>
+
+        <main>
+            <section id="resources" class="content-section visible">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    
+                    <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-3">课程录像</h2>
+                        
+                        <div id="video-player-container" class="mb-6 bg-black rounded-lg shadow-inner aspect-video">
+                            <div class="flex items-center justify-center h-full">
+                                <p class="text-white/70">请从右侧选择一个视频进行播放</p>
+                            </div>
+                        </div>
+                        <div id="waline"></div>
+                        <script type="module">
+                        import { init } from 'https://unpkg.com/@waline/client@v3/dist/waline.js';
+
+                        init({
+                        el: '#waline',
+                        serverURL: 'https://coursely-ehh2a0jom-brvc3s-projects.vercel.app',
+                        });
+                        </script>
+    
+                        <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-3">课程课件</h3>
+                        <ul id="resource-list" class="space-y-4">
+                            </ul>
+                    </div>
+    
+                    <div class="lg:col-span-1 bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-lg font-semibold text-gray-700 mb-3">视频列表</h2>
+                        <ul id="video-list" class="space-y-2">
+                            </ul>
+                    </div>
+
+                </div>
+            </section>
+            <section id="compiler" class="content-section">
+                <div class="bg-white rounded-lg shadow-md p-6"><h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-3">C语言在线编译器</h2><p class="text-gray-500 text-sm mb-4">你可以在这里直接编写、编译和运行C代码进行测试。</p><iframe id="compiler-frame" src="https://www.runoob.com/try/runcode.php?filename=helloworld&type=c" scrolling="no"></iframe></div>
+            </section>
+            <section id="assignments" class="content-section">
+                 <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4 border-b pb-3">课程作业列表</h2>
+                    <div id="assignment-list" class="space-y-6"></div>
+                </div>
+            </section>
+
+            <section id="pta" class="content-section">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                        <h2 class="text-2xl font-semibold text-gray-800">在线测评</h2>
+                    </div>
+                    <div class="prose max-w-none">
+                        <div class="flex flex-col gap-6">
+                            <div class="bg-blue-50/50 rounded-xl p-6 border border-blue-100">
+                                <h3 class="text-lg font-semibold text-blue-900 mb-2">浙江大学 PTA 编程测评平台</h3>
+                                <p class="text-blue-800/80 mb-4">通过实时自动评测系统，立即获取您的程序评测结果。在这里，您可以：</p>
+                                <ul class="list-disc list-inside text-blue-800/70 mb-4 space-y-1">
+                                    <li>提交程序代码获取即时反馈</li>
+                                    <li>查看详细的测试用例结果</li>
+                                    <li>了解程序的运行效率和内存使用</li>
+                                    <li>与其他同学的完成情况进行比较</li>
+                                </ul>
+                                <a href="https://pintia.cn/" target="_blank" class="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors group">
+                                    <span>进入 PTA 平台</span>
+                                    <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                                    </svg>
+                                </a>
+                            </div>
+                            <div class="bg-gray-50/80 rounded-xl p-6 border border-gray-200">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">快速提示</h3>
+                                <div class="space-y-3 text-gray-700">
+                                    <p class="flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <span>首次使用需要注册账号并加入课程。课程加入码请查看课程群通知。</span>
+                                    </p>
+                                    <p class="flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <span>提交代码前请仔细阅读题目要求，特别注意输入输出格式。</span>
+                                    </p>
+                                    <p class="flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <span>系统会自动检查代码的正确性、时间复杂度和空间复杂度。</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="text-center mt-12 py-4">
+            <p class="text-gray-500 text-sm">&copy; 2025 教学改革课程组. All Rights Reserved.</p>
+        </footer>
+    </div>
+    <script src="course-data.js"></script>
+    <script src="course-loader.js"></script>
+</body>
+</html>
