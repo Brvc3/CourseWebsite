@@ -16,10 +16,17 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeCourse(courseId) {
+    console.log('Initializing course with ID:', courseId);
     const course = coursesData[courseId];
+    console.log('Course data:', course);
 
     document.title = course.title;
-    document.getElementById('course-title').textContent = course.title;
+    const courseTitleElement = document.getElementById('course-title');
+    if (courseTitleElement) {
+        courseTitleElement.textContent = course.title;
+    } else {
+        console.error('course-title element not found');
+    }
     
     const resourceList = document.getElementById('resource-list');
     resourceList.innerHTML = course.resources.map(res => `
@@ -190,7 +197,10 @@ function initializeCourse(courseId) {
 
     // 课程作业列表
     const assignmentList = document.getElementById('assignment-list');
-    if(assignmentList) {
+    console.log('Assignment list element:', assignmentList);
+    console.log('Course assignments:', course.assignments);
+    
+    if(assignmentList && course.assignments) {
         // 定义作业文件路径
         const homeworksPath = `courses/${courseId}/homeworks/`;
         const assignments = course.assignments.map((asm, index) => {
@@ -279,9 +289,16 @@ function initializeCourse(courseId) {
                     if (response.ok) {
                         const markdown = await response.text();
                         console.log('Markdown content length:', markdown.length);
+                        console.log('Marked available:', typeof marked !== 'undefined');
+                        
                         // 使用marked解析Markdown
-                        const htmlContent = marked.parse(markdown);
-                        textContainer.innerHTML = htmlContent;
+                        if (typeof marked !== 'undefined') {
+                            const htmlContent = marked.parse(markdown);
+                            textContainer.innerHTML = htmlContent;
+                        } else {
+                            // 如果marked没有加载，直接显示原始文本
+                            textContainer.innerHTML = '<pre>' + markdown + '</pre>';
+                        }
                         
                         // 添加代码高亮和图表支持
                         if (textContainer.querySelectorAll('pre code').length > 0) {
