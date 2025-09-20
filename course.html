@@ -396,14 +396,17 @@
     <!-- 加载认证脚本 -->
     <script src="components/auth.js"></script>
     <script>
-    // 从 URL 获取课程 ID 并设置
-    document.addEventListener('DOMContentLoaded', function() {
+    // 在页面加载前立即设置 courseId
+    (function() {
         const urlParams = new URLSearchParams(window.location.search);
         const courseId = urlParams.get('id');
         if (courseId) {
             document.body.setAttribute('data-course-id', courseId);
         }
-        
+    })();
+    
+    // 从 URL 获取课程 ID 并设置
+    document.addEventListener('DOMContentLoaded', function() {
         // 初始化认证功能
         setTimeout(() => {
             if (window.authManager) {

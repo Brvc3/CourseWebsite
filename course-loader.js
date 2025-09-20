@@ -1,14 +1,21 @@
 // course-loader.js (已升級以支援分P影片)
 document.addEventListener('DOMContentLoaded', function() {
-    const body = document.body;
-    const courseId = body.dataset.courseId;
-    
-    if (!courseId || typeof coursesData === 'undefined' || !coursesData[courseId]) {
-        console.error('Course data not found for ID:', courseId);
-        document.getElementById('course-title').textContent = '错误：找不到课程信息';
-        return;
-    }
+    // 延迟检查，确保data-course-id已经设置
+    setTimeout(() => {
+        const body = document.body;
+        const courseId = body.dataset.courseId;
+        
+        if (!courseId || typeof coursesData === 'undefined' || !coursesData[courseId]) {
+            console.error('Course data not found for ID:', courseId);
+            document.getElementById('course-title').textContent = '错误：找不到课程信息';
+            return;
+        }
+        
+        initializeCourse(courseId);
+    }, 100);
+});
 
+function initializeCourse(courseId) {
     const course = coursesData[courseId];
 
     document.title = course.title;
@@ -264,10 +271,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 const courseId = document.body.getAttribute('data-course-id');
                 const mdPath = \`courses/\${courseId}/homeworks/作业\${index}.md\`;
 
+                console.log('Loading assignment:', index, 'courseId:', courseId, 'path:', mdPath);
+
                 try {
                     const response = await fetch(mdPath);
+                    console.log('Fetch response:', response.status, response.ok);
                     if (response.ok) {
                         const markdown = await response.text();
+                        console.log('Markdown content length:', markdown.length);
                         // 使用marked解析Markdown
                         const htmlContent = marked.parse(markdown);
                         textContainer.innerHTML = htmlContent;
@@ -328,4 +339,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-});
+}
